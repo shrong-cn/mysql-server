@@ -48,6 +48,8 @@ class Rotate_innodb_master_key : public Alter_instance {
   ~Rotate_innodb_master_key() override = default;
 };
 
+};
+
 class Rotate_binlog_master_key : public Alter_instance {
  public:
   explicit Rotate_binlog_master_key(THD *thd) : Alter_instance(thd) {}
@@ -98,3 +100,4 @@ class Reload_keyring : public Alter_instance {
 };
 
 #endif /* SQL_ALTER_INSTANCE_INCLUDED */
+

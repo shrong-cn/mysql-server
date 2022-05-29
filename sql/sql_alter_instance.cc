@@ -127,10 +127,18 @@ bool Rotate_innodb_master_key::execute() {
     return true;
   }
 
-  if (hton->rotate_encryption_master_key()) {
-    /* SE should have raised error */
-    assert(m_thd->get_stmt_da()->is_error());
-    return true;
+  if (tablespace_.length > 0) {
+    if (hton->rotate_tablespace_master_key(tablespace_.str, 0)) {
+      /* SE should have raised error */
+      assert(m_thd->get_stmt_da()->is_error());
+      return true;
+    }
+  } else {
+    if (hton->rotate_encryption_master_key()) {
+      /* SE should have raised error */
+      assert(m_thd->get_stmt_da()->is_error());
+      return true;
+    }
   }
 
   if (log_to_binlog()) {
@@ -252,3 +260,4 @@ bool Reload_keyring::execute() {
   my_ok(m_thd);
   return false;
 }
+

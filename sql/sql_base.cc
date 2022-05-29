@@ -7834,6 +7834,18 @@ Field *find_field_in_table_ref(THD *thd, Table_ref *table_list,
                    (uchar *)&mf);
     } else  // surely fld != NULL (see outer if())
       fld->table->mark_column_used(fld, thd->mark_used_columns);
+
+//  if (memcmp(fld->field_name, "sr_", 3) == 0 &&
+//      memcmp(*fld->table_name, "t1", 2) == 0) {
+//      fld->set_hidden(dd::Column::enum_hidden_type::HT_HIDDEN_SE);
+//  }
+#if 0
+    if (fld->field_length>3 && fld->field_name && memcmp(fld->field_name, "sr_", 3) == 0 &&
+        fld->table_name && *fld->table_name && strlen(*fld->table_name)>3 && memcmp(*fld->table_name, "sr_", 3) == 0) {
+        fld->set_hidden(dd::Column::enum_hidden_type::HT_HIDDEN_SE);
+    }
+#endif
+
   }
   return fld;
 }

@@ -1534,7 +1534,10 @@ class Fil_system {
 
   /** Rotate the tablespace keys by new master key.
   @return the number of tablespaces that failed to rotate. */
-  [[nodiscard]] size_t encryption_rotate();
+
+  //[[nodiscard]] size_t encryption_rotate();
+  size_t encryption_rotate() MY_ATTRIBUTE((warn_unused_result));
+  size_t encryption_rotate_one(fil_space_t *) MY_ATTRIBUTE((warn_unused_result));
 
   /** Reencrypt tablespace keys by current master key. */
   void encryption_reencrypt(std::vector<space_id_t> &sid_vector);
@@ -9083,12 +9086,39 @@ size_t Fil_system::encryption_rotate() {
   return fail_count;
 }
 
+<<<<<<< HEAD
 void Fil_system::encryption_reencrypt(
     std::vector<space_id_t> &space_id_vector) {
   /* If there are no tablespaces to reencrypt, return true. */
   if (space_id_vector.empty()) {
     return;
   }
+=======
+size_t Fil_system::encryption_rotate_one(fil_space_t *space) {
+  /* Rotate this encrypted tablespace. */
+  mtr_t mtr;
+  mtr_start(&mtr);
+  byte encrypt_info[Encryption::INFO_SIZE];
+  memset(encrypt_info, 0, Encryption::INFO_SIZE);
+  bool rotate_ok = fsp_header_rotate_encryption(space, encrypt_info, &mtr);
+  ut_ad(rotate_ok);
+  mtr_commit(&mtr);
+
+  /* This crash forces encryption rotate to complete at startup. */
+  /* DBUG_EXECUTE_IF(
+      "ib_encryption_rotate_crash",
+      ib::info(ER_IB_MSG_INJECT_FAILURE, "ib_encryption_rotate_crash");
+      DBUG_SUICIDE(););
+  */
+  return rotate_ok?0:1;
+}
+
+size_t fil_encryption_rotate() { return (fil_system->encryption_rotate()); }
+size_t fil_encryption_rotate_one(const char* tablespace) {
+  fil_space_t *sp = fil_system->get_space_by_name(tablespace);
+  return (fil_system->encryption_rotate_one(sp));
+}
+>>>>>>> 5c230cf0987 (rebase)
 
   size_t fail_count = 0;
   byte encrypt_info[Encryption::INFO_SIZE];
@@ -11789,3 +11819,4 @@ void fil_space_t::bump_version() {
   ++m_version;
 }
 #endif /* !UNIV_HOTBACKUP */
+

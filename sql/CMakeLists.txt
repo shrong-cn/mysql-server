@@ -20,6 +20,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
+ADD_SUBDIRECTORY(kms_agent)
+
 INCLUDE_DIRECTORIES(SYSTEM ${BOOST_PATCHES_DIR} ${BOOST_INCLUDE_DIR})
 
 MY_INCLUDE_SYSTEM_DIRECTORIES(ICU)
@@ -1242,10 +1244,17 @@ IF(MSVC)
   ADD_DEPENDENCIES(mysqld GenMysqldDef)
 ENDIF()
 
+set(TARSCPP /usr/local/tars/cpp)
+
 SET_TARGET_PROPERTIES(mysqld PROPERTIES ENABLE_EXPORTS TRUE)
 TARGET_LINK_LIBRARIES(mysqld
   sql_main sql_gis binlog rpl master slave sql_dd mysys
-  minchassis binlogevents_static ${ICU_LIBRARIES})
+  minchassis binlogevents_static ${ICU_LIBRARIES}
+  ${CMAKE_BINARY_DIR}/sql/kms_agent/libkms_agent.a
+  ${TARSCPP}/lib/libtarsservant.a ${TARSCPP}/lib/libtarsutil.a
+#  ${TARSCPP}/thirdparty/lib/libssl.a ${TARSCPP}/thirdparty/lib/libcrypto.a
+  pthread
+  )
 
 # Add dependency on ldap library, to ensure it is not unloaded
 # when we shutdown the authentication plugin.
@@ -1399,6 +1408,12 @@ MYSQL_ADD_PLUGIN(udf_example udf_example.cc
   MODULE_ONLY TEST_ONLY MODULE_OUTPUT_NAME "udf_example"
   )
 # MYSQL_ADD_PLUGIN may have decided not to build it.
+MYSQL_ADD_PLUGIN(sr_udf sr/sr_udf.cc
+  sr/shrong_sm4.c sr/shrong_sm4_api.c
+  sr/shrong_des_api.c
+  MODULE_ONLY MODULE_OUTPUT_NAME "sr_udf"
+  )
+
 IF(WIN32 AND TARGET udf_example)
   SET_TARGET_PROPERTIES(udf_example
     PROPERTIES LINK_FLAGS

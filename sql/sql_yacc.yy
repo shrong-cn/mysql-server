@@ -16215,7 +16215,39 @@ alter_instance_action:
             }
             else if (is_identifier($2, "BINLOG"))
             {
-              $$= NEW_PTN PT_alter_instance(ROTATE_BINLOG_MASTER_KEY, EMPTY_CSTR);
+              $$= NEW_PTN PT_alter_instance(ROTATE_BINLOG_MASTER_KEY, EMPTY_CSTR, 0);
+            }
+            else
+            {
+              YYTHD->syntax_error_at(@2);
+              MYSQL_YYABORT;
+            }
+          }
+          | ROTATE_SYM ident_or_text TABLESPACE_SYM label_ident MASTER_SYM KEY_SYM {
+            $$= NEW_PTN PT_alter_instance(ROTATE_INNODB_MASTER_KEY, $4, 0);
+          }
+          | ROTATE_SYM ident_or_text SYSTEM_SYM KEY_SYM ulong_num
+          {
+            if (is_identifier($2, "INNODB"))
+            {
+              if ($5 > UINT_MAX32 - 1)
+              {
+                my_error(ER_SYSTEM_KEY_ROTATION_MAX_KEY_ID_EXCEEDED, MYF(0));
+                MYSQL_YYABORT;
+              }
+              $$= NEW_PTN PT_alter_instance(ROTATE_INNODB_SYSTEM_KEY, EMPTY_CSTR, $5);
+            }
+            else
+            {
+              YYTHD->syntax_error_at(@2);
+              MYSQL_YYABORT;
+            }
+          }
+          | ROTATE_SYM ident_or_text SYSTEM_SYM KEY_SYM
+          {
+            if (is_identifier($2, "REDO"))
+            {
+              $$= NEW_PTN PT_alter_instance(ROTATE_REDO_SYSTEM_KEY, EMPTY_CSTR, 0);
             }
             else
             {
@@ -18238,3 +18270,4 @@ json_attribute:
 /**
   @} (end of group Parser)
 */
+

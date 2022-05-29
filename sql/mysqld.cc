@@ -7198,6 +7198,7 @@ class Plugin_and_data_dir_option_parser final {
   bool valid_;
 };
 
+#include <sql/kms_agent/kms_agent.h>
 #ifdef _WIN32
 int win_main(int argc, char **argv)
 #else
@@ -7205,6 +7206,7 @@ int mysqld_main(int argc, char **argv)
 #endif
 {
   // Substitute the full path to the executable in argv[0]
+ 
   substitute_progpath(argv);
   sysd::notify_connect();
   sysd::notify("STATUS=Server startup in progress\n");
@@ -7297,6 +7299,9 @@ int mysqld_main(int argc, char **argv)
   //  Init error log subsystem. This does not actually open the log yet.
   if (init_error_log()) unireg_abort(MYSQLD_ABORT_EXIT);
   if (!opt_validate_config) adjust_related_options(&requested_open_files);
+
+  //agent的启动位置对mysql启动是否成功有一定影响，具体原因未定位到。
+  start_kms_agent(0,argv);
 
 #ifdef WITH_PERFSCHEMA_STORAGE_ENGINE
   if (heo_error == 0) {
@@ -8377,6 +8382,7 @@ static bool default_service_handling(char **argv, const char *servicename,
 }
 
 int mysqld_main(int argc, char **argv) {
+
   bool mysqld_monitor = false;
   mysqld_early_option = is_early_option(argc, argv);
 
@@ -12457,3 +12463,30 @@ bool check_and_update_partial_revokes_sysvar(THD *thd) {
   }
   return false;
 }
+
+
+
+/**
+  动态库需要反向调用基础组件函数
+  注册以防止被编译器strip掉
+**/
+#include "server_component/kms_imp.h"
+#include <mysql/components/services/log_builtins.h>
+#include <sql/kms_agent/kms_agent.h>
+
+//extern SERVICE_TYPE(log_builtins) *log_bi;
+struct RegistrationHelper {
+   char* argv[2]={nullptr,nullptr};
+   RegistrationHelper() {
+       kms_imp::log("RegistrationHelper started");
+       kms_imp::binaryToHexPrintableSep("");
+       kms_imp::binaryToHexPrintable("");
+       kms_imp::hexPrintableToBinary("");
+       kms_imp::test_udf_method_1();
+       //kms_imp::get_kms_key(0,0,0,0);
+       //start_kms_agent(0,argv);
+   }
+};
+
+static RegistrationHelper hlp;
+

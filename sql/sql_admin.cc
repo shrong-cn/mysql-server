@@ -1920,7 +1920,7 @@ bool Sql_cmd_alter_instance::execute(THD *thd) {
   DBUG_TRACE;
   switch (alter_instance_action) {
     case ROTATE_INNODB_MASTER_KEY:
-      alter_instance = new Rotate_innodb_master_key(thd);
+      alter_instance = new Rotate_innodb_master_key(thd, channel_name_);
       break;
     case ALTER_INSTANCE_RELOAD_TLS:
       alter_instance = new Alter_instance_reload_tls(thd, channel_name_, true);
@@ -2331,3 +2331,4 @@ bool Sql_cmd_alter_user_default_role::execute(THD *thd) {
 
   return ret;
 }
+

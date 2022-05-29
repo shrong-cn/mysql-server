@@ -2079,6 +2079,15 @@ typedef bool (*rotate_encryption_master_key_t)(void);
 
 /**
   @brief
+  rotate one master key of tablespace
+
+  @returns false on success,
+           true on failure
+*/
+typedef bool (*rotate_tablespace_master_key_t)(const char* tablespace, int keyID);
+
+/**
+  @brief
   Enable or Disable SE write ahead logging.
 
   @param[in] thd    server thread handle
@@ -2728,6 +2737,7 @@ struct handlerton {
   notify_rename_table_t notify_rename_table;
   notify_truncate_table_t notify_truncate_table;
   rotate_encryption_master_key_t rotate_encryption_master_key;
+  rotate_tablespace_master_key_t rotate_tablespace_master_key;
   redo_log_set_state_t redo_log_set_state;
 
   get_table_statistics_t get_table_statistics;
@@ -7375,3 +7385,4 @@ class ha_tablespace_statistics {
 };
 
 #endif /* HANDLER_INCLUDED */
+

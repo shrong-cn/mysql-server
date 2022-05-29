@@ -1,0 +1,40 @@
+/*
+ * Copyright 2017 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2017 Ribose Inc. All Rights Reserved.
+ *
+ * Licensed under the OpenSSL license (the "License").  You may not use
+ * this file except in compliance with the License.  You can obtain a copy
+ * in the file LICENSE in the source distribution or at
+ * https://www.openssl.org/source/license.html
+ */
+
+#ifndef OSSL_CRYPTO_SM4_H
+#define OSSL_CRYPTO_SM4_H
+
+//# include <openssl/opensslconf.h>
+//# include <openssl/e_os2.h>
+
+//# include "e_os2.h"
+//#include <stdint.h>
+
+#define ossl_inline inline
+#include <inttypes.h>
+
+#define SR_SM4_ENCRYPT 1
+#define SR_SM4_DECRYPT 0
+
+#define SR_SM4_BLOCK_SIZE 16
+#define SR_SM4_KEY_SCHEDULE 32
+
+typedef struct SR_SM4_KEY_st
+{
+    uint32_t rk[SR_SM4_KEY_SCHEDULE];
+} SR_SM4_KEY;
+
+int SR_SM4_set_key(const uint8_t *key, SR_SM4_KEY *ks);
+
+void SR_SM4_encrypt(const uint8_t *in, uint8_t *out, const SR_SM4_KEY *ks);
+
+void SR_SM4_decrypt(const uint8_t *in, uint8_t *out, const SR_SM4_KEY *ks);
+
+#endif

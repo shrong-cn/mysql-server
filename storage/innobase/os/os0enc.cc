@@ -48,6 +48,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 #include "my_rnd.h"
 #include "mysql/service_mysql_keyring.h"
 #include "mysqld.h"
+#include <iostream>
+
 
 namespace innobase {
 namespace encryption {
@@ -324,6 +326,7 @@ void Encryption::get_master_key(uint32_t master_key_id, char *srv_uuid,
 #endif /* UNIV_ENCRYPT_DEBUG */
 }
 
+//生成key_id和key
 void Encryption::get_master_key(uint32_t *master_key_id,
                                 byte **master_key) noexcept {
 #ifndef UNIV_HOTBACKUP
@@ -381,10 +384,15 @@ void Encryption::get_master_key(uint32_t *master_key_id,
     }
 #endif /* UNIV_ENCRYPT_DEBUG */
   } else {
+    ++s_master_key_id;
     *master_key_id = s_master_key_id;
 
     snprintf(key_name, MASTER_KEY_NAME_MAX_LEN, "%s-%s-" UINT32PF,
              MASTER_KEY_PREFIX, s_uuid, *master_key_id);
+
+    /* We call keyring API to generate master key here. */
+    (void)innobase::encryption::generate_key(key_name, innodb_key_type,
+                                             KEY_LEN);
 
     /* We call keyring API to get master key here. */
     retval = keyring_operations_helper::read_secret(
@@ -456,6 +464,9 @@ bool Encryption::fill_encryption_info(
 
     if (master_key == nullptr) {
       return (false);
+    } else {
+      std::cout << "master key id: " << master_key_id
+                << "master key: " << master_key;
     }
 
     ut_ad(master_key_id != DEFAULT_MASTER_KEY_ID);

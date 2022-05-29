@@ -1973,7 +1973,11 @@ dberr_t fil_set_autoextend_size(space_id_t space_id, uint64_t autoextend_size);
 
 /** Rotate the tablespace keys by new master key.
 @return the number of tablespaces that failed to rotate. */
-[[nodiscard]] size_t fil_encryption_rotate();
+
+//[[nodiscard]] size_t fil_encryption_rotate();
+
+size_t fil_encryption_rotate() MY_ATTRIBUTE((warn_unused_result));
+size_t fil_encryption_rotate_one(const char*) MY_ATTRIBUTE((warn_unused_result));
 
 /** Roencrypt the tablespace keys by current master key. */
 void fil_encryption_reencrypt(std::vector<space_id_t> &sid_vector);

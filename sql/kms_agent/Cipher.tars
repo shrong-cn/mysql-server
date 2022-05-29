@@ -1,0 +1,51 @@
+
+module SR5000
+{
+    struct Ctx {
+        0 optional string ip;                       //请求者ip
+        1 optional string serverName;              //请求者名称
+    };
+
+    struct SecretKeyInfo {
+        0 require long keyId;                   //密钥ID
+        1 require vector<unsigned byte> content;               //密钥内容
+        2 require int length;                   //密钥长度
+    };
+
+    struct GenerateSecretKeyReq{
+        0 require  int length;                   //密钥长度
+    };
+
+    struct GenerateSecretKeyRsq{
+        0 require SecretKeyInfo secretKeyInfo;
+    };
+
+
+    struct GetSecretKeyReq{
+        0 require int keyId;                       
+    };
+
+    struct GetSecretKeyRsq{
+        0 require SecretKeyInfo secretKeyInfo;
+    };
+
+    struct DestroySecretKeyReq{
+        0 require int keyId;                        
+    };
+
+    interface Cipher
+    {
+        //生成密钥
+        //keyLength：密钥长度
+        //keyInfo:密钥信息
+        int GenerateSecretKey(Ctx ctx, GenerateSecretKeyReq req, out GenerateSecretKeyRsq rsp);
+
+        //获取密钥
+        int GetSecretKey(Ctx ctx, GetSecretKeyReq req, out GetSecretKeyRsq rsp);
+
+        //销毁密钥
+        int DestroySecretKey(Ctx ctx, DestroySecretKeyReq req);
+    };
+
+}; 
+

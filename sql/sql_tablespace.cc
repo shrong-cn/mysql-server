@@ -921,6 +921,15 @@ bool Sql_cmd_alter_tablespace::execute(THD *thd) {
     return true;
   }
 
+  //add by sr
+  if (m_options->encryption.str && !dd::is_encrypted(m_options->encryption)) {
+    auto &tsn=m_tablespace_name;
+    if (tsn.length>3 && strcasecmp(tsn.str,"sr_")==0) {
+      my_error(ER_CANNOT_SET_TABLESPACE_ENCRYPTION, MYF(0), "shrong tablespace should be encrypted");
+      return true;
+    }
+  }
+
   if (lock_tablespace_names(thd, m_tablespace_name)) {
     return true;
   }

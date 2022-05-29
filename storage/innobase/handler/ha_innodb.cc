@@ -185,6 +185,13 @@ this program; if not, write to the Free Software Foundation, Inc.,
 #include "trx0xa.h"
 #include "ut0mem.h"
 #include "ut0test.h"
+/*
+<<<<<<< HEAD
+=======
+#include "ut0ut.h"
+#include "xtradb_i_s.h"
+>>>>>>> 5c230cf0987 (rebase)
+*/
 #else
 #include <typelib.h>
 #include "buf0types.h"
@@ -4413,6 +4420,7 @@ bool innobase_encryption_key_rotation() {
   master_key = nullptr;
 
   /* Generate the new master key. */
+  /* key已由获取密钥的操作来生成了 */
   Encryption::create_master_key(&master_key);
 
   if (master_key == nullptr) {
@@ -4447,6 +4455,211 @@ error_exit:
   return (ret);
 }
 
+<<<<<<< HEAD
+=======
+bool innobase_tablespace_master_key_rotation(const char* tablespace, int keyID) {
+  bool ret = false;
+
+  /* Pause here to try other locks while this thread holds the backup locks. */
+  DEBUG_SYNC_C("ib_pause_encryption_rotate");
+
+  if (srv_read_only_mode) {
+    my_error(ER_INNODB_READ_ONLY, MYF(0));
+    return (true);
+  }
+
+  /* Take mutex as master_key_id is going to be changed. */
+  mutex_enter(&master_key_id_mutex);
+
+  /* Test read master key */
+  ;
+  if (2==1) {
+    my_error(ER_CANNOT_FIND_KEY_IN_KEYRING, MYF(0));
+    ret = true;
+    goto error_exit;
+  }
+
+  /* Rotate the specified tablespace. */
+  if (fil_encryption_rotate_one(tablespace) > 0) {
+    my_error(ER_CANNOT_FIND_KEY_IN_KEYRING, MYF(0));
+    goto error_exit;
+  }
+
+error_exit:
+  /* Release the mutex. */
+  mutex_exit(&master_key_id_mutex);
+
+  return (ret);
+}
+
+bool innobase_fix_default_table_encryption(ulong encryption_option, bool is_server_starting) {
+  if (!srv_read_only_mode) {
+    return fil_crypt_set_encrypt_tables(
+        static_cast<enum_default_table_encryption>(encryption_option), is_server_starting);
+  }
+  return false;
+}
+
+bool innobase_check_mk_keyring_exclusions(THD *thd, longlong dte_val) {
+  if (dte_val == DEFAULT_TABLE_ENC_ONLINE_TO_KEYRING ||
+      dte_val == DEFAULT_TABLE_ENC_ONLINE_FROM_KEYRING_TO_UNENCRYPTED) {
+    if (lock_keyrings(nullptr) == 0) {
+      my_printf_error(ER_WRONG_ARGUMENTS,
+                      "The default_table_encryption option cannot be changed, "
+                      "keyring plugin is not available",
+                      MYF(0));
+      return true;
+    }
+    if (!Encryption::is_keyring_alive()) {
+      my_printf_error(ER_WRONG_ARGUMENTS,
+                      "The default_table_encryption option cannot be changed, "
+                      "keyring plugin is installed but it seems it was not "
+                      "properly initialized.",
+                      MYF(0));
+      unlock_keyrings(nullptr);
+      return true;
+    }
+  }
+
+  if (dte_val == DEFAULT_TABLE_ENC_ONLINE_TO_KEYRING) {
+    if (srv_undo_log_encrypt == true) {
+      push_warning_printf(thd, Sql_condition::SL_WARNING, ER_WRONG_ARGUMENTS,
+                          "Online encryption to KEYRING cannot be turned ON"
+                          " as Undo log Master Key encryption is turned ON."
+                          " Please disable the Undo log Master key encryption"
+                          " (innodb_undo_log_encrypt) and try again.");
+      return true;
+    }
+    if (srv_sys_tablespace_encrypt == SYS_TABLESPACE_ENCRYPT_ON) {
+      push_warning_printf(
+          thd, Sql_condition::SL_WARNING, ER_WRONG_ARGUMENTS,
+          "Online encryption to KEYRING cannot be turned ON"
+          " as system tablespace is encrypted with Master Key"
+          " encryption. In case you want system tablespace to"
+          " get re-encrypted with KEYRING encryption set"
+          " --innodb-sys_tablespace_encrypt to RE_ENCRYPTING_TO_KEYRING");
+       return true;
+    }
+  }
+
+  return false;
+}
+
+/** Fix the empty UUID of tablespaces like system, temp etc by generating
+a new master key and do key rotation. These tablespaces if encrypted
+during startup, will be encrypted with tablespace key which has empty UUID
+@return false on success, true on failure */
+bool innobase_fix_tablespaces_empty_uuid() {
+#ifdef UNIV_DEBUG
+  /* This API is called only after uuid is ready */
+  srv_is_uuid_ready = true;
+#endif /* UNIV_DEBUG */
+
+  if (Encryption::get_master_key_id() == 0) {
+    /* We have to call srv_enable_redo_encryption during every startup, to
+       report errors generated in this function correctly. Without this call
+       here, some illegal configurations, such as enabling encryption without a
+       keyring are silently accepted, and result in errors later during the
+       server run. These functions are also called later, when the master key is
+       correctly set up, later in this function.
+     */
+    if (srv_enable_redo_encryption(nullptr)) {
+      srv_redo_log_encrypt = REDO_LOG_ENCRYPT_OFF;
+    } else {
+      log_rotate_default_key();
+    }
+  }
+
+  /* If we are in read only mode, we cannot do rotation but it
+  is OK */
+  if (srv_read_only_mode) {
+    return (false);
+  }
+
+  /* We only need to handle the case when an encrypted tablespace
+  is created at startup. If it is > 1, it means we already have fixed
+  the UUID */
+  if (Encryption::get_master_key_id() > 1) {
+    return (false);
+  }
+
+  if (!default_master_key_used) {
+    return (false);
+  }
+
+  byte *master_key = nullptr;
+  uint32_t master_key_id;
+  Encryption::get_master_key(&master_key_id, &master_key);
+
+  if (master_key == nullptr) {
+    my_error(ER_CANNOT_FIND_KEY_IN_KEYRING, MYF(0));
+    return (true);
+  }
+  my_free(master_key);
+
+  master_key = nullptr;
+
+  /* Generate the new master key. */
+  Encryption::create_master_key(&master_key);
+
+  if (master_key == nullptr) {
+    my_error(ER_CANNOT_FIND_KEY_IN_KEYRING, MYF(0));
+    return (true);
+  }
+
+  if (srv_enable_redo_encryption(nullptr)) {
+    srv_redo_log_encrypt = REDO_LOG_ENCRYPT_OFF;
+  } else {
+    log_rotate_default_key();
+  }
+
+  /** Check if sys, temp need rotation to fix the empty uuid */
+  space_id_vec space_ids;
+
+  space_ids.push_back(srv_sys_space.space_id());
+  space_ids.push_back(srv_tmp_space.space_id());
+  space_ids.push_back(dict_sys_t::s_space_id);
+
+#ifdef UNIV_DEBUG
+  /* Currently all session temp tablespaces that use empty uuid
+  are destroyed. So if there is encrypted sesion temp tablespace
+  we assert here */
+  const auto find_encrypted = [&](const ibt::Tablespace *ts) {
+    if (ts->is_encrypted()) {
+      ut_ad(0);
+    }
+  };
+
+  ibt::tbsp_pool->iterate_active_tbsp(find_encrypted);
+#endif /* UNIV_DEBUG */
+
+  undo::spaces->s_lock();
+  for (auto undo_space : undo::spaces->m_spaces) {
+    /* We already added system tablespace */
+    if (undo_space->id() == TRX_SYS_SPACE) {
+      continue;
+    }
+    space_ids.push_back(undo_space->id());
+  }
+  undo::spaces->s_unlock();
+
+  /* Rotate log tablespace */
+  bool failure1 = !log_rotate_encryption();
+
+  bool failure2 = !fil_encryption_rotate_global(space_ids);
+
+  my_free(master_key);
+
+  /* If rotation failure, return error */
+  if (failure1 || failure2) {
+    my_error(ER_CANNOT_FIND_KEY_IN_KEYRING, MYF(0));
+    return (true);
+  }
+
+  return (false);
+}
+
+>>>>>>> 5c230cf0987 (rebase)
 /** Enable or Disable SE write ahead logging.
 @param[in]      thd     connection THD
 @param[in]      enable  enable/disable redo logging
@@ -5203,6 +5416,21 @@ static int innodb_init(void *p) {
   innobase_hton->rotate_encryption_master_key =
       innobase_encryption_key_rotation;
 
+<<<<<<< HEAD
+=======
+  innobase_hton->rotate_tablespace_master_key =
+      innobase_tablespace_master_key_rotation;
+
+  innobase_hton->fix_tablespaces_empty_uuid =
+      innobase_fix_tablespaces_empty_uuid;
+
+  innobase_hton->fix_default_table_encryption =
+      innobase_fix_default_table_encryption;
+
+  innobase_hton->check_mk_keyring_exclusions =
+      innobase_check_mk_keyring_exclusions;
+
+>>>>>>> 5c230cf0987 (rebase)
   innobase_hton->redo_log_set_state = innobase_redo_set_state;
 
   innobase_hton->post_ddl = innobase_post_ddl;
@@ -21301,6 +21529,12 @@ static int validate_innodb_undo_log_encrypt(THD *thd, SYS_VAR *var, void *save,
   }
   bool target = *static_cast<bool *>(save);
 
+  if (target == false) {
+    //add by sr
+    my_error(ER_SPECIFIC_ACCESS_DENIED_ERROR, MYF(0), "SET INNODB_UNDO_LOG_ENCRYPT = OFF");
+    return 1;
+  }
+
   /* Set the default output to current value for all error cases. */
   *static_cast<bool *>(save) = srv_undo_log_encrypt;
 
@@ -21882,6 +22116,107 @@ static void innodb_log_checksums_update(THD *, SYS_VAR *, void *var_ptr,
   innodb_log_checksums_func_update(check);
 }
 
+<<<<<<< HEAD
+=======
+/** Enable or disable encryption of temporary tablespace
+@param[in]	thd	thread handle
+@param[in]	var	system variable
+@param[out]	var_ptr	current value
+@param[in]	save	immediate result from check function */
+static void innodb_temp_tablespace_encryption_update(THD *thd, SYS_VAR *var,
+                                                     void *var_ptr,
+                                                     const void *save) {
+  if (srv_read_only_mode) {
+    push_warning_printf(thd, Sql_condition::SL_WARNING, ER_WRONG_ARGUMENTS,
+                        " Temporary tablespace cannot be"
+                        " encrypted in innodb_read_only mode");
+    return;
+  }
+
+  bool check = *static_cast<const bool *>(save);
+
+  dberr_t err = srv_temp_encryption_update(check);
+  if (err != DB_SUCCESS) {
+    push_warning_printf(thd, Sql_condition::SL_WARNING, ER_WRONG_ARGUMENTS,
+                        " Temporary tablespace couldn't be"
+                        " encrypted. Check if keyring plugin"
+                        " is loaded.");
+  } else {
+    *static_cast<bool *>(var_ptr) = *static_cast<const bool *>(save);
+  }
+}
+
+/** Enable or disable encryption of redo logs
+@param[in]	thd	thread handle
+@param[in]	var	system variable
+@param[out]	var_ptr	current value
+@param[in]	save	immediate result from check function */
+static void update_innodb_redo_log_encrypt(THD *thd, SYS_VAR *var,
+                                           void *var_ptr, const void *save) {
+  const ulong target = *static_cast<const ulong *>(save);
+
+  if (srv_redo_log_encrypt == target) {
+    /* No change */
+    return;
+  }
+
+  if (target == REDO_LOG_ENCRYPT_OFF) {
+    //disable mysql function
+    //srv_redo_log_encrypt = REDO_LOG_ENCRYPT_OFF;
+    my_error(ER_SPECIFIC_ACCESS_DENIED_ERROR, MYF(0), "SET INNODB_REDO_LOG_ENCRYPT OFF");
+    //ib::info(ER_SPECIFIC_ACCESS_DENIED_ERROR,"REDO_LOG_ENCRYPT_OFF is forbidden");
+    return;
+  }
+
+  if (existing_redo_encryption_mode != REDO_LOG_ENCRYPT_OFF &&
+      existing_redo_encryption_mode != target &&
+      !(existing_redo_encryption_mode == REDO_LOG_ENCRYPT_MK &&
+        target == REDO_LOG_ENCRYPT_ON)) {
+    ib::error(ER_REDO_ENCRYPTION_CANT_BE_CHANGED,
+              log_encrypt_name(existing_redo_encryption_mode),
+              log_encrypt_name(static_cast<redo_log_encrypt_enum>(target)));
+    ib_senderrf(thd, IB_LOG_LEVEL_WARN, ER_DA_REDO_ENCRYPTION_CANT_BE_CHANGED,
+                log_encrypt_name(existing_redo_encryption_mode),
+                log_encrypt_name(static_cast<redo_log_encrypt_enum>(target)));
+    return;
+  }
+
+  if (srv_read_only_mode) {
+    ib::error(ER_IB_MSG_1242);
+    ib_senderrf(thd, IB_LOG_LEVEL_WARN, ER_IB_MSG_1242);
+    return;
+  }
+
+  ut_ad(strlen(server_uuid) > 0);
+
+  if (!Encryption::check_keyring()) {
+    ib_senderrf(thd, IB_LOG_LEVEL_WARN, ER_DA_REDO_ENCRYPTION_KEYRING);
+    ib::error(ER_REDO_ENCRYPTION_KEYRING);
+    return;
+  }
+
+  if (target == REDO_LOG_ENCRYPT_MK || target == REDO_LOG_ENCRYPT_ON) {
+    if (srv_enable_redo_encryption_mk(thd)) {
+      return;
+    }
+    srv_redo_log_encrypt = target;
+    return;
+  }
+
+  if (target == REDO_LOG_ENCRYPT_RK) {
+    ut_ad(strlen(server_uuid) > 0);
+    if (srv_enable_redo_encryption_rk(thd)) {
+      return;
+    }
+
+    srv_redo_log_encrypt = target;
+    return;
+  }
+
+  ut_ad(0);
+}
+
+>>>>>>> 5c230cf0987 (rebase)
 static SHOW_VAR innodb_status_variables_export[] = {
     {"Innodb", (char *)&show_innodb_vars, SHOW_FUNC, SHOW_SCOPE_GLOBAL},
     {NullS, NullS, SHOW_LONG, SHOW_SCOPE_GLOBAL}};
@@ -24175,3 +24510,4 @@ static bool innobase_check_reserved_file_name(handlerton *, const char *name) {
   return (true);
 }
 #endif /* !UNIV_HOTBACKUP */
+

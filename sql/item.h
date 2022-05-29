@@ -7121,12 +7121,22 @@ std::string ItemToString(const Item *item);
 
 inline size_t CountVisibleFields(const mem_root_deque<Item *> &fields) {
   return std::count_if(fields.begin(), fields.end(),
-                       [](Item *item) { return !item->hidden; });
+                       [](Item *item) {
+          //if (item->item_name.eq("description")) {
+          //   return false;
+          //}
+          return !item->hidden;
+      });
 }
 
 inline size_t CountHiddenFields(const mem_root_deque<Item *> &fields) {
   return std::count_if(fields.begin(), fields.end(),
-                       [](Item *item) { return item->hidden; });
+           [](Item *item) {
+          //if (item->item_name.eq("description")) {
+          //   return true;
+          //}
+          return item->hidden;
+      });
 }
 
 inline Item *GetNthVisibleField(const mem_root_deque<Item *> &fields,

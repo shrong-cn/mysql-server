@@ -67,11 +67,13 @@ SET(MYSQL_SERVER_COMPONENT_SOURCES
   mysql_command_backend.cc
   mysql_status_variable_reader_imp.cc
   storing_auto_thd.cc
+  kms_imp.cc
   )
+
 
 # This static library is used to build mysqld binary and in some unit test cases
 ADD_LIBRARY(mysql_server_component_services STATIC
   ${MYSQL_SERVER_COMPONENT_SOURCES})
 TARGET_COMPILE_DEFINITIONS(mysql_server_component_services
   PRIVATE WITH_MYSQL_COMPONENTS_TEST_DRIVER)
-ADD_DEPENDENCIES(mysql_server_component_services GenError)
+ADD_DEPENDENCIES(mysql_server_component_services GenError kms_agent)

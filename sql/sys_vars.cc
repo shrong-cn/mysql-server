@@ -7353,8 +7353,11 @@ bool Sys_var_binlog_encryption::global_update(THD *thd, set_var *var) {
   bool res = false;
   if (new_value)
     res = rpl_encryption.enable(thd);
-  else
-    rpl_encryption.disable(thd);
+  else {
+    my_error(ER_SPECIFIC_ACCESS_DENIED_ERROR, MYF(0), "DISABLE_BINLOG_ENCRYPTION");
+    return true;
+    //rpl_encryption.disable(thd);
+  }
   mysql_mutex_lock(&LOCK_global_system_variables);
   return res;
 }

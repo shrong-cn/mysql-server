@@ -2841,6 +2841,16 @@ bool THD::send_result_metadata(const mem_root_deque<Item *> &list, uint flags) {
     case RESULTSET_METADATA_FULL:
       /* Send metadata. */
       for (Item *item : VisibleFields(list)) {
+        //强制不返回的特殊列
+        //这里没有使用mysql的hidden field，因为mysql hidden field还是可以被查到
+	/*
+	if (item->item_name.length()>3){
+          Name_string field_prefix(item->item_name.ptr(),3);
+          if (field_prefix.eq("sr_")) {
+	    continue;
+	  }
+	}
+        */
         Send_field field;
         item->make_field(&field);
         m_protocol->start_row();
@@ -2875,6 +2885,17 @@ bool THD::send_result_set_row(const mem_root_deque<Item *> &row_items) {
   DBUG_TRACE;
 
   for (Item *item : VisibleFields(row_items)) {
+    /*
+    if (item->item_name.length()>3){
+      Name_string field_prefix(item->item_name.ptr(),3);
+      if (field_prefix.eq("sr_")) {
+        continue;
+      }
+    }
+    if (item->item_name.eq("description")) {
+      continue;
+    }
+    */
     if (item->send(m_protocol, &str_buffer) || is_error()) return true;
     /*
       Reset str_buffer to its original state, as it may have been altered in
@@ -3287,3 +3308,4 @@ void my_eof(THD *thd) {
     tst->add_trx_state(thd, TX_RESULT_SET);
   }
 }
+
