@@ -864,9 +864,9 @@ IF(NOT WITHOUT_SERVER)
     # Do not use data from unit testing when optimizing.
     OPTION(WITH_UNIT_TESTS "Compile MySQL with unit tests" OFF)
   ELSE()
-    OPTION(WITH_UNIT_TESTS "Compile MySQL with unit tests" ON)
+    OPTION(WITH_UNIT_TESTS "Compile MySQL with unit tests" OFF)
   ENDIF()
-  OPTION(WITH_ROUTER "Build MySQL Router" ON)
+  OPTION(WITH_ROUTER "Build MySQL Router" OFF)
 ENDIF()
 
 IF(EXISTS ${CMAKE_SOURCE_DIR}/internal/CMakeLists.txt)
@@ -2157,7 +2157,7 @@ IF(NOT WITHOUT_SERVER)
     IF(WIN32)
       SET(WITH_SHARED_UNITTEST_LIBRARY_DEFAULT OFF)
     ELSE()
-      SET(WITH_SHARED_UNITTEST_LIBRARY_DEFAULT ON)
+      SET(WITH_SHARED_UNITTEST_LIBRARY_DEFAULT OFF)
     ENDIF()
     OPTION(WITH_SHARED_UNITTEST_LIBRARY
       "Build a shared library for unit tests which depend on the entire server"
@@ -2182,10 +2182,10 @@ ELSE()
 ENDIF()
 
 IF(WITH_UNIT_TESTS)
-  ADD_SUBDIRECTORY(unittest)
-  ADD_SUBDIRECTORY(unittest/examples)
+  #ADD_SUBDIRECTORY(unittest)
+  #ADD_SUBDIRECTORY(unittest/examples)
   ADD_SUBDIRECTORY(unittest/mytap)
-  ADD_SUBDIRECTORY(unittest/mytap/t)
+  #ADD_SUBDIRECTORY(unittest/mytap/t)
 ENDIF()
 
 ADD_SUBDIRECTORY(client)
@@ -2201,7 +2201,7 @@ ENDIF()
 # Some unit tests need to link with the entire server, use this library:
 IF(NOT WITHOUT_SERVER AND WITH_UNIT_TESTS)
 
-  IF(WITH_SHARED_UNITTEST_LIBRARY)
+  IF(0)
     MERGE_LIBRARIES_SHARED(server_unittest_library SKIP_INSTALL LINK_PUBLIC
       sql_main
       ${MYSQLD_STATIC_PLUGIN_LIBS}

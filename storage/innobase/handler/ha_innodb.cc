@@ -185,13 +185,10 @@ this program; if not, write to the Free Software Foundation, Inc.,
 #include "trx0xa.h"
 #include "ut0mem.h"
 #include "ut0test.h"
-/*
-<<<<<<< HEAD
-=======
+/////
 #include "ut0ut.h"
-#include "xtradb_i_s.h"
->>>>>>> 5c230cf0987 (rebase)
-*/
+// #include "xtradb_i_s.h"
+
 #else
 #include <typelib.h>
 #include "buf0types.h"
@@ -4455,8 +4452,6 @@ error_exit:
   return (ret);
 }
 
-<<<<<<< HEAD
-=======
 bool innobase_tablespace_master_key_rotation(const char* tablespace, int keyID) {
   bool ret = false;
 
@@ -4492,6 +4487,7 @@ error_exit:
   return (ret);
 }
 
+#if 0
 bool innobase_fix_default_table_encryption(ulong encryption_option, bool is_server_starting) {
   if (!srv_read_only_mode) {
     return fil_crypt_set_encrypt_tables(
@@ -4658,8 +4654,8 @@ bool innobase_fix_tablespaces_empty_uuid() {
 
   return (false);
 }
+#endif
 
->>>>>>> 5c230cf0987 (rebase)
 /** Enable or Disable SE write ahead logging.
 @param[in]      thd     connection THD
 @param[in]      enable  enable/disable redo logging
@@ -5416,21 +5412,21 @@ static int innodb_init(void *p) {
   innobase_hton->rotate_encryption_master_key =
       innobase_encryption_key_rotation;
 
-<<<<<<< HEAD
-=======
-  innobase_hton->rotate_tablespace_master_key =
-      innobase_tablespace_master_key_rotation;
+// <<<<<<< HEAD
+// =======
+//   innobase_hton->rotate_tablespace_master_key =
+//       innobase_tablespace_master_key_rotation;
 
-  innobase_hton->fix_tablespaces_empty_uuid =
-      innobase_fix_tablespaces_empty_uuid;
+//   innobase_hton->fix_tablespaces_empty_uuid =
+//       innobase_fix_tablespaces_empty_uuid;
 
-  innobase_hton->fix_default_table_encryption =
-      innobase_fix_default_table_encryption;
+//   innobase_hton->fix_default_table_encryption =
+//       innobase_fix_default_table_encryption;
 
-  innobase_hton->check_mk_keyring_exclusions =
-      innobase_check_mk_keyring_exclusions;
+//   innobase_hton->check_mk_keyring_exclusions =
+//       innobase_check_mk_keyring_exclusions;
 
->>>>>>> 5c230cf0987 (rebase)
+// >>>>>>> 5c230cf0987 (rebase)
   innobase_hton->redo_log_set_state = innobase_redo_set_state;
 
   innobase_hton->post_ddl = innobase_post_ddl;
@@ -22116,8 +22112,7 @@ static void innodb_log_checksums_update(THD *, SYS_VAR *, void *var_ptr,
   innodb_log_checksums_func_update(check);
 }
 
-<<<<<<< HEAD
-=======
+#if 0
 /** Enable or disable encryption of temporary tablespace
 @param[in]	thd	thread handle
 @param[in]	var	system variable
@@ -22215,8 +22210,8 @@ static void update_innodb_redo_log_encrypt(THD *thd, SYS_VAR *var,
 
   ut_ad(0);
 }
+#endif
 
->>>>>>> 5c230cf0987 (rebase)
 static SHOW_VAR innodb_status_variables_export[] = {
     {"Innodb", (char *)&show_innodb_vars, SHOW_FUNC, SHOW_SCOPE_GLOBAL},
     {NullS, NullS, SHOW_LONG, SHOW_SCOPE_GLOBAL}};

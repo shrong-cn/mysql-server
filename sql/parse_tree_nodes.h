@@ -2019,6 +2019,12 @@ class PT_alter_instance final : public Parse_tree_root {
   Sql_cmd_alter_instance sql_cmd;
 
  public:
+  // explicit PT_alter_instance(
+  //     enum alter_instance_action_enum alter_instance_action,
+  //     const LEX_CSTRING &channel,
+  //     uint key_id)
+  //     : sql_cmd(alter_instance_action, channel, key_id) {}
+
   explicit PT_alter_instance(
       enum alter_instance_action_enum alter_instance_action,
       const LEX_CSTRING &channel)

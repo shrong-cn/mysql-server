@@ -24,6 +24,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
 #define SQL_ALTER_INSTANCE_INCLUDED
 
 #include <my_inttypes.h>
+#include <string>
+#include <iostream>
+#include "lex_string.h"
 
 class THD;
 /*
@@ -42,13 +45,18 @@ class Alter_instance {
 
 class Rotate_innodb_master_key : public Alter_instance {
  public:
-  explicit Rotate_innodb_master_key(THD *thd) : Alter_instance(thd) {}
+  //explicit Rotate_innodb_master_key(THD *thd) : Alter_instance(thd) {}
+  explicit Rotate_innodb_master_key(THD *thd, LEX_CSTRING tablespace) : Alter_instance(thd), tablespace_(tablespace)
+  {
+    std::cout << "Rotate_innodb_master_key: channel name: " << std::string_view{tablespace.str, tablespace.length} << std::endl;
+  }
 
   bool execute() override;
   ~Rotate_innodb_master_key() override = default;
+
+  LEX_CSTRING tablespace_;
 };
 
-};
 
 class Rotate_binlog_master_key : public Alter_instance {
  public:

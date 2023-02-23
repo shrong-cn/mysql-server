@@ -16215,7 +16215,7 @@ alter_instance_action:
             }
             else if (is_identifier($2, "BINLOG"))
             {
-              $$= NEW_PTN PT_alter_instance(ROTATE_BINLOG_MASTER_KEY, EMPTY_CSTR, 0);
+              $$= NEW_PTN PT_alter_instance(ROTATE_BINLOG_MASTER_KEY, EMPTY_CSTR);
             }
             else
             {
@@ -16224,18 +16224,13 @@ alter_instance_action:
             }
           }
           | ROTATE_SYM ident_or_text TABLESPACE_SYM label_ident MASTER_SYM KEY_SYM {
-            $$= NEW_PTN PT_alter_instance(ROTATE_INNODB_MASTER_KEY, $4, 0);
+            $$= NEW_PTN PT_alter_instance(ROTATE_INNODB_MASTER_KEY, $4);
           }
           | ROTATE_SYM ident_or_text SYSTEM_SYM KEY_SYM ulong_num
           {
             if (is_identifier($2, "INNODB"))
             {
-              if ($5 > UINT_MAX32 - 1)
-              {
-                my_error(ER_SYSTEM_KEY_ROTATION_MAX_KEY_ID_EXCEEDED, MYF(0));
-                MYSQL_YYABORT;
-              }
-              $$= NEW_PTN PT_alter_instance(ROTATE_INNODB_SYSTEM_KEY, EMPTY_CSTR, $5);
+              $$= NEW_PTN PT_alter_instance(ROTATE_INNODB_MASTER_KEY, EMPTY_CSTR);
             }
             else
             {
@@ -16243,11 +16238,12 @@ alter_instance_action:
               MYSQL_YYABORT;
             }
           }
+          /*  暂不支持直接rotate redo的密钥
           | ROTATE_SYM ident_or_text SYSTEM_SYM KEY_SYM
           {
             if (is_identifier($2, "REDO"))
             {
-              $$= NEW_PTN PT_alter_instance(ROTATE_REDO_SYSTEM_KEY, EMPTY_CSTR, 0);
+              $$= NEW_PTN PT_alter_instance(ROTATE_REDO_SYSTEM_KEY, EMPTY_CSTR);
             }
             else
             {
@@ -16255,6 +16251,7 @@ alter_instance_action:
               MYSQL_YYABORT;
             }
           }
+          */
         | RELOAD TLS_SYM
           {
             $$ = NEW_PTN PT_alter_instance(ALTER_INSTANCE_RELOAD_TLS_ROLLBACK_ON_ERROR, to_lex_cstring("mysql_main"));

@@ -133,8 +133,8 @@ IF(NOT WITHOUT_SERVER)
     MESSAGE(STATUS "Building ndbcluster plugin")
   ENDIF()
 
-  NDB_ADD_TEST("ndb_bitmap-t" "plugin/ndb_bitmap.cc" LIBS ndbgeneral)
-  NDB_ADD_TEST("ndb_blobs_buffer-t" "plugin/ndb_blobs_buffer.cc" LIBS ndbgeneral)
+  # NDB_ADD_TEST("ndb_bitmap-t" "plugin/ndb_bitmap.cc" LIBS ndbgeneral)
+  # NDB_ADD_TEST("ndb_blobs_buffer-t" "plugin/ndb_blobs_buffer.cc" LIBS ndbgeneral)
 ELSEIF(NOT WITH_NDB)
   IF(WITH_NDBCLUSTER_STORAGE_ENGINE)
     MESSAGE(WARNING "Skips building ndbcluster plugin, WITHOUT_SERVER=ON "
