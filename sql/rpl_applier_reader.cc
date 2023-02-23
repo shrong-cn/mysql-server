@@ -29,6 +29,7 @@
 #include "sql/rpl_rli.h"
 #include "sql/rpl_rli_pdb.h"
 #include "sql/sql_backup_lock.h"
+#include "sql/debug_sync.h"
 
 /**
    It manages a stage and the related mutex and makes the process of

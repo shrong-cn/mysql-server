@@ -18,3 +18,7 @@ For additional downloads and the source of MySQL, visit
   http://dev.mysql.com/downloads/
 
 MySQL is brought to you by the MySQL team at Oracle.
+
+
+在192.168.40.188编译命令
+cmake .. -DCMAKE_BUILD_TYPE=DEBUG -DWITH_BOOST=. -DDOWNLOAD_BOOST=1 -DMYSQL_DATADIR=/data/mysql -DWITH_NDBCLUSTER_STORAGE_ENGINE=0 -DFORCE_INSOURCE_BUILD=1 -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-9/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-9/root/usr/bin/gcc -DCMAKE_INSTALL_PREFIX=/usr/local/mysql-8.0.32
