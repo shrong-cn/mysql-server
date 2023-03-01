@@ -23430,6 +23430,7 @@ static MYSQL_SYSVAR_STR(directories, srv_innodb_directories,
 #ifdef UNIV_DEBUG
 /** Use this variable innodb_interpreter to execute debug code within InnoDB.
 The output is stored in the innodb_interpreter_output variable. */
+
 static MYSQL_THDVAR_STR(interpreter, PLUGIN_VAR_OPCMDARG | PLUGIN_VAR_NOPERSIST,
                         "Invoke InnoDB test interpreter with commands"
                         " to be executed.",

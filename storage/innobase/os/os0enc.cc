@@ -871,8 +871,8 @@ bool Encryption::encrypt_log_block(const IORequest &, byte *src_ptr,
 
     memcpy(check_buf, dst_ptr, OS_FILE_LOG_BLOCK_SIZE);
     log_block_set_encrypt_bit(check_buf, true);
-    dberr_t err = decrypt_log(type, check_buf, OS_FILE_LOG_BLOCK_SIZE, buf2,
-                              OS_FILE_LOG_BLOCK_SIZE);
+    dberr_t err = decrypt_log(IORequestLogWrite, check_buf, OS_FILE_LOG_BLOCK_SIZE, buf2
+                              );
     if (err != DB_SUCCESS ||
         memcmp(src_ptr, check_buf, OS_FILE_LOG_BLOCK_SIZE) != 0) {
       std::ostringstream msg{};
@@ -881,7 +881,7 @@ bool Encryption::encrypt_log_block(const IORequest &, byte *src_ptr,
 
       msg.seekp(0);
       ut_print_buf_hex(msg, check_buf, OS_FILE_LOG_BLOCK_SIZE);
-      ib::fatal() << msg.str();
+      ib::error() << msg.str();
     }
     ut::free(buf2);
     ut::free(check_buf);
@@ -925,7 +925,7 @@ byte *Encryption::encrypt_log(const IORequest &type, byte *src, ulint src_len,
 
     memcpy(check_buf, dst, src_len);
 
-    dberr_t err = decrypt_log(type, check_buf, src_len, buf2, src_len);
+    dberr_t err = decrypt_log(IORequestLogWrite, check_buf, src_len, buf2);
     if (err != DB_SUCCESS || memcmp(src, check_buf, src_len) != 0) {
       std::ostringstream msg{};
       ut_print_buf_hex(msg, src, src_len);
@@ -933,7 +933,7 @@ byte *Encryption::encrypt_log(const IORequest &type, byte *src, ulint src_len,
 
       msg.seekp(0);
       ut_print_buf_hex(msg, check_buf, src_len);
-      ib::fatal() << msg.str();
+      ib::error() << msg.str();
     }
     ut::free(buf2);
     ut::free(check_buf);
@@ -1109,6 +1109,8 @@ byte *Encryption::encrypt(const IORequest &type, byte *src, ulint src_len,
     ut::free(buf2);
     ut::free(check_buf);
 
+    ulint space_id = mach_read_from_4(src + FIL_PAGE_ARCH_LOG_NO_OR_SPACE_ID);
+    ulint page_no = mach_read_from_4(src + FIL_PAGE_OFFSET);
     fprintf(stderr, "Encrypted page:%lu.%lu\n", space_id, page_no);
   }
 #endif /* UNIV_ENCRYPT_DEBUG */
